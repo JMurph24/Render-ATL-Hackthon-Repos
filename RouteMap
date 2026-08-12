@@ -1,0 +1,11 @@
+from ._anvil_designer import RouteMapTemplate
+from anvil import *
+
+
+class RouteMap(RouteMapTemplate):
+  def __init__(self, **properties):
+    super().__init__(**properties)
+
+  @handle("back_button", "click")
+  def back_button_click(self, **event_args):
+    open_form("Form1")

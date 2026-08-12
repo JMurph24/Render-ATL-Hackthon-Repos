@@ -1,0 +1,72 @@
+from ._anvil_designer import Form1Template
+from anvil import *
+from .. import EventStore
+
+
+class Form1(Form1Template):
+  def __init__(self, **properties):
+    super().__init__(**properties)
+    self._chat_messages = []
+    self.chat_messages.items = self._chat_messages
+    self.upcoming_events.items = EventStore.events
+    self.status_menu.visible = False
+    self._status_class = ""
+
+  def plan_event_click(self, event):
+    open_form("PlanEvent")
+
+  def details_click(self, event):
+    open_form("EventDetails")
+
+  def route_click(self, event):
+    open_form("RouteMap")
+
+  def reminder_click(self, event):
+    self._show_feedback("Departure reminder set for 6:32 PM — ten minutes before it’s time to go.")
+
+  def availability_click(self, event):
+    self.status_menu.visible = not self.status_menu.visible
+
+  def set_leaving_soon_click(self, event):
+    self._set_status("Leaving soon", "status-leaving", "5 of 6")
+
+  def set_checking_in_click(self, event):
+    self._set_status("Checking in", "status-checking", "5 of 6")
+
+  def set_ready_click(self, event):
+    self._set_status("Ready", "status-ready", "5 of 6")
+
+  def set_cancelled_click(self, event):
+    self._set_status("Cancelled", "status-cancelled", "4 of 6")
+
+  def open_chat_click(self, event):
+    self._show_feedback("You’re connected to the Dinner crew chat.")
+
+  def send_message_click(self, event):
+    message = self.dom_nodes["chat_message"].value.strip()
+    if message:
+      self._chat_messages.append({"message": message})
+      self.chat_messages.items = self._chat_messages
+      self.dom_nodes["chat_message"].value = ""
+    else:
+      self._show_feedback("Write a quick update for the group first.")
+
+  def confirm_event_click(self, event):
+    self.confirmation_panel.classes.add("is-confirmed")
+    self.dom_nodes["confirm_button"].textContent = "Plan confirmed ✓"
+    self._show_feedback("Plan confirmed. Event details and your 6:42 PM leave-by time are ready to email to all 6 guests.")
+
+  def _show_feedback(self, message):
+    self.dom_nodes["plan_feedback"].textContent = message
+
+  def _set_status(self, status, status_class, group_count):
+    if self._status_class:
+      self.availability_card.classes.remove(self._status_class)
+    self._status_class = status_class
+    self.availability_card.classes.add("status-updated")
+    self.availability_card.classes.add(status_class)
+    self.dom_nodes["availability_text"].textContent = status
+    self.dom_nodes["group_count"].textContent = group_count
+    self.dom_nodes["status_button_text"].textContent = "Change status"
+    self.status_menu.visible = False
+    self._show_feedback("Your group can now see that you’re {}.".format(status.lower()))

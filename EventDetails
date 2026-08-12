@@ -1,0 +1,11 @@
+from ._anvil_designer import EventDetailsTemplate
+from anvil import *
+
+
+class EventDetails(EventDetailsTemplate):
+  def __init__(self, **properties):
+    super().__init__(**properties)
+
+  @handle("back_button", "click")
+  def back_button_click(self, **event_args):
+    open_form("Form1")

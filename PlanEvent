@@ -1,0 +1,51 @@
+from ._anvil_designer import PlanEventTemplate
+from anvil import *
+from .. import EventStore
+
+
+class PlanEvent(PlanEventTemplate):
+  def __init__(self, **properties):
+    super().__init__(**properties)
+    self._event_type = "Solo event"
+    self._attendee_text = "1 person is going"
+
+  def choose_solo_click(self, event):
+    self._choose_event_type("Solo event", "1 person is going", self.solo_choice, self.group_choice)
+
+  def choose_group_click(self, event):
+    self._choose_event_type("Group event", "Invite your group", self.group_choice, self.solo_choice)
+
+  @handle("set_event", "click")
+  def set_event_click(self, **event_args):
+    if not self.event_name_box.text or not self.location_box.text or not self.event_date_picker.date:
+      self.form_feedback.text = "Add an event name, location, and date to continue."
+      return
+
+    event_date = self.event_date_picker.date
+    event_time = self.event_time_picker.date
+    EventStore.add({
+      "name": self.event_name_box.text.strip(),
+      "location": self.location_box.text.strip(),
+      "day": event_date.strftime("%d").lstrip("0"),
+      "month": event_date.strftime("%b").upper(),
+      "weekday": event_date.strftime("%a").upper(),
+      "date_time": event_date.strftime("%A, %B ") + event_date.strftime("%d").lstrip("0") + ", " + self._time_text(event_time),
+      "event_type": self._event_type,
+      "attendee_text": self._attendee_text,
+    })
+    open_form("Form1")
+
+  @handle("cancel_button", "click")
+  def cancel_button_click(self, **event_args):
+    open_form("Form1")
+
+  def _time_text(self, event_time):
+    if not event_time:
+      return "time to be set"
+    return event_time.strftime("%I:%M %p").lstrip("0")
+
+  def _choose_event_type(self, event_type, attendee_text, selected_choice, other_choice):
+    self._event_type = event_type
+    self._attendee_text = attendee_text
+    selected_choice.classes.add("active")
+    other_choice.classes.remove("active")
